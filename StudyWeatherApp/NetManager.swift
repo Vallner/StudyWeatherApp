@@ -164,8 +164,8 @@ class NetManager{
          session = URLSession(configuration: configuration)
     }
     
-    func obtainData() async throws -> Weather{
-        let url = URL(string: "https://api.weatherapi.com/v1/forecast.json?key=42a6424772284474b8c102539251805&q=Minsk&days=7&aqi=yes&alerts=no")!
+    func obtainData(for city: String) async throws -> Weather{
+        let url = URL(string: "https://api.weatherapi.com/v1/forecast.json?key=42a6424772284474b8c102539251805&q=" + city + "&days=7&aqi=yes&alerts=no")!
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "GET"
         

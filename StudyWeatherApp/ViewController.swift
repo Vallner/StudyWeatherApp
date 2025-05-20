@@ -10,8 +10,17 @@ import UIKit
 class ViewController: UIViewController {
     
     var netManager: NetManager = NetManager(with: .default)
+    
     var weather:Weather?
     
+    var refresh = UIRefreshControl()
+    
+    let headerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBlue
+        view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        return view
+    }()
     lazy var cityLabel: UILabel = {
         let label = UILabel()
         label.textColor = .white
@@ -78,8 +87,9 @@ class ViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.estimatedRowHeight = 80
+        tableView.layer.cornerRadius = 10
         tableView.register(WeatherCell.self, forCellReuseIdentifier: "WeatherCell")
-        tableView.backgroundColor = .clear
+        tableView.backgroundColor = UIColor(#colorLiteral(red: 0.2392156869, green: 0.6745098233, blue: 0.9686274529, alpha: 1))
         return tableView
         
     }()
@@ -87,18 +97,19 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         
         super.viewDidLoad()
-        returnTemperature()
+        loadForecast(for: "Minsk")
         setupLayout()
+
     }
     
-    func returnTemperature() {
+    func loadForecast(for city: String) {
         Task{
             do{
-                weather = try await  netManager.obtainData()
+                weather = try await  netManager.obtainData(for: city)
                 
                 imageView.image = try await UIImage(data : netManager.getImage(urlString: "https:" + weather!.current.condition.icon))
                 
-                temperatureLabel.text = "\(weather!.current.tempC)"
+                temperatureLabel.text = "\(weather!.current.tempC)" + "°"
                 
                 dateOfRequest.text = weather!.location.localtime
                 
@@ -122,39 +133,43 @@ class ViewController: UIViewController {
         let stackView = UIStackView(arrangedSubviews: [imageView, descriptionLabel])
         stackView.axis = .horizontal
         stackView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.addSubview(refresh)
+        refresh.addTarget(self, action: #selector(refreshData), for: UIControl.Event.valueChanged)
+        
         
         view.backgroundColor = .systemBlue
-        view.addSubview(stackView)
-        view.addSubview(dateOfRequest)
-        view.addSubview(cityLabel)
-        view.addSubview(temperatureLabel)
-        view.addSubview(windLabel)
-        view.addSubview(humidityLabel)
+        headerView.addSubview(stackView)
+        headerView.addSubview(dateOfRequest)
+        headerView.addSubview(cityLabel)
+        headerView.addSubview(temperatureLabel)
+        headerView.addSubview(windLabel)
+        headerView.addSubview(humidityLabel)
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
-            cityLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 250),
-            cityLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            cityLabel.topAnchor.constraint(equalTo: headerView.topAnchor, constant: 30),
+            cityLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
             cityLabel.bottomAnchor.constraint(equalTo: dateOfRequest.topAnchor),
             
-            dateOfRequest.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            dateOfRequest.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
             dateOfRequest.bottomAnchor.constraint(equalTo: temperatureLabel.topAnchor, constant: -20),
             
-            temperatureLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            temperatureLabel.bottomAnchor.constraint(equalTo: stackView.topAnchor,constant: 20),
+            temperatureLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
+            temperatureLabel.bottomAnchor.constraint(equalTo: stackView.topAnchor,constant: -20),
             
-            stackView.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: -15),
+            stackView.centerXAnchor.constraint(equalTo: headerView.centerXAnchor, constant: -15),
             stackView.bottomAnchor.constraint(equalTo: windLabel.topAnchor),
             
-            windLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            windLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
             windLabel.bottomAnchor.constraint(equalTo: humidityLabel.topAnchor),
             
-            humidityLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            humidityLabel.bottomAnchor.constraint(equalTo: tableView.topAnchor, constant: -20),
-            
+            humidityLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
+            humidityLabel.bottomAnchor.constraint(equalTo: headerView.bottomAnchor, constant: -20),
+
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor)
-            
             
         ])
     }
@@ -174,6 +189,21 @@ extension ViewController:UITableViewDataSource,UITableViewDelegate{
         return cell
     }
     
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
     
+        tableView.sectionHeaderTopPadding = 0
+        let sectionView = headerView
+        sectionView.layer.shadowRadius = 10
+        sectionView.layer.shadowOpacity = 0.5
+        
+        return sectionView
+    }
     
+    @objc func refreshData(send:UIRefreshControl) {
+
+        loadForecast(for: "Minsk")
+        setupLayout()
+        tableView.reloadData()
+        send.endRefreshing()
+    }
 }
