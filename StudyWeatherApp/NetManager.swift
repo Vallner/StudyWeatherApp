@@ -6,10 +6,88 @@
 //
 import Foundation
 
+
+
+
+
+
+
+
+
 // MARK: - Weather
 struct Weather: Codable {
     let location: Location
     let current: Current
+    let forecast: Forecast
+}
+
+struct Forecast: Codable {
+    let forecastday: [Forecastday]
+}
+
+struct Forecastday: Codable {
+    let date: String
+    let dateEpoch: Int
+    let day: Day
+//    let hour: [Hour]
+
+    enum CodingKeys: String, CodingKey {
+        case date
+        case dateEpoch = "date_epoch"
+        case day
+    }
+}
+
+struct Day: Codable {
+    let maxtempC, maxtempF, mintempC, mintempF: Decimal
+    let avgtempC, avgtempF, maxwindMph, maxwindKph: Decimal
+    let totalprecipMm, totalprecipIn: Decimal
+    let totalsnowCM: Decimal
+    let avgvisKM: Decimal
+    let avgvisMiles, avghumidity: Decimal
+    let dailyWillItRain, dailyChanceOfRain: Int
+    let dailyWillItSnow, dailyChanceOfSnow: Int
+    let condition: Condition
+    let uv: Decimal
+//    let airQuality: AirQuality
+    
+    enum CodingKeys: String, CodingKey {
+        case maxtempC = "maxtemp_c"
+        case maxtempF = "maxtemp_f"
+        case mintempC = "mintemp_c"
+        case mintempF = "mintemp_f"
+        case avgtempC = "avgtemp_c"
+        case avgtempF = "avgtemp_f"
+        case maxwindMph = "maxwind_mph"
+        case maxwindKph = "maxwind_kph"
+        case totalprecipMm = "totalprecip_mm"
+        case totalprecipIn = "totalprecip_in"
+        case totalsnowCM = "totalsnow_cm"
+        case avgvisKM = "avgvis_km"
+        case avgvisMiles = "avgvis_miles"
+        case avghumidity
+        case dailyWillItRain = "daily_will_it_rain"
+        case dailyChanceOfRain = "daily_chance_of_rain"
+        case dailyWillItSnow = "daily_will_it_snow"
+        case dailyChanceOfSnow = "daily_chance_of_snow"
+        case condition, uv
+//        case airQuality = "air_quality"
+    }
+}
+struct AirQuality: Codable {
+    let co, no2, o3, so2: Decimal?
+    let pm25, pm10: Decimal?
+    let usEpaIndex, gbDefraIndex: Int?
+    let aqiData: String?
+
+    enum CodingKeys: String, CodingKey {
+        case co, no2, o3, so2
+        case pm25 = "pm2_5"
+        case pm10
+        case usEpaIndex = "us-epa-index"
+        case gbDefraIndex = "gb-defra-index"
+        case aqiData = "aqi_data"
+    }
 }
 
 // MARK: - Current
@@ -48,16 +126,17 @@ struct Current: Codable {
         case gustKph = "gust_kph"
         case airQuality = "air_quality"
     }
-    // MARK: - Condition
-    struct Condition: Codable {
-        let text, icon: String
-        let code: Int
-    }
+    
+}
+// MARK: - Condition
+struct Condition: Codable {
+    let text, icon: String
+    let code: Int
 }
     // MARK: - Location
     struct Location: Codable {
         let name, region, country: String
-        let lat, lon: Double
+        let lat, lon: Decimal
         let tzID: String
         let localtimeEpoch: Int
         let localtime: String
@@ -86,7 +165,7 @@ class NetManager{
     }
     
     func obtainData() async throws -> Weather{
-        let url = URL(string: "https://api.weatherapi.com/v1/current.json?key=42a6424772284474b8c102539251805&q=Minsk&aqi=yes")!
+        let url = URL(string: "https://api.weatherapi.com/v1/forecast.json?key=42a6424772284474b8c102539251805&q=Minsk&days=7&aqi=yes&alerts=no")!
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "GET"
         

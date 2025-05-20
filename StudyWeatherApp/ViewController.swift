@@ -10,6 +10,7 @@ import UIKit
 class ViewController: UIViewController {
     
     var netManager: NetManager = NetManager(with: .default)
+    var weather:Weather?
     
     lazy var cityLabel: UILabel = {
         let label = UILabel()
@@ -71,33 +72,45 @@ class ViewController: UIViewController {
         return label
     }()
     
+    lazy var tableView:UITableView = {
+        let tableView = UITableView()
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.estimatedRowHeight = 80
+        tableView.register(WeatherCell.self, forCellReuseIdentifier: "WeatherCell")
+        tableView.backgroundColor = .clear
+        return tableView
+        
+    }()
+    
     override func viewDidLoad() {
         
         super.viewDidLoad()
         returnTemperature()
         setupLayout()
     }
-    override func viewDidAppear(_ animated: Bool) {
-        returnTemperature()
-    }
+    
     func returnTemperature() {
         Task{
             do{
-                let weather = try await  netManager.obtainData()
+                weather = try await  netManager.obtainData()
                 
-                imageView.image = try await UIImage(data : netManager.getImage(urlString: "https:" + weather.current.condition.icon))
+                imageView.image = try await UIImage(data : netManager.getImage(urlString: "https:" + weather!.current.condition.icon))
                 
-                temperatureLabel.text = "\(weather.current.tempC)"
+                temperatureLabel.text = "\(weather!.current.tempC)"
                 
-                dateOfRequest.text = weather.location.localtime
+                dateOfRequest.text = weather!.location.localtime
                 
-                cityLabel.text = weather.location.name
+                cityLabel.text = weather!.location.name
                 
-                descriptionLabel.text = weather.current.condition.text
+                descriptionLabel.text = weather!.current.condition.text
                 
-                windLabel.text = "\(weather.current.windKph) km/h"
+                windLabel.text = "\(weather!.current.windKph) km/h"
                 
-                humidityLabel.text = "\(weather.current.humidity)%"
+                humidityLabel.text = "\(weather!.current.humidity)%"
+                
+                tableView.reloadData()
  
             } catch {
                 print("Error: \(error)")
@@ -117,6 +130,7 @@ class ViewController: UIViewController {
         view.addSubview(temperatureLabel)
         view.addSubview(windLabel)
         view.addSubview(humidityLabel)
+        view.addSubview(tableView)
         NSLayoutConstraint.activate([
             cityLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 250),
             cityLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -134,10 +148,32 @@ class ViewController: UIViewController {
             windLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             windLabel.bottomAnchor.constraint(equalTo: humidityLabel.topAnchor),
             
-            humidityLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            humidityLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            humidityLabel.bottomAnchor.constraint(equalTo: tableView.topAnchor, constant: -20),
+            
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor)
             
             
         ])
     }
 }
 
+extension ViewController:UITableViewDataSource,UITableViewDelegate{
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        weather?.forecast.forecastday.count ?? 0
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = WeatherCell()
+        cell.delegate = self
+        cell.configureCell(with: weather!.forecast.forecastday[indexPath.row])
+        cell.setupLayout()
+        return cell
+    }
+    
+    
+    
+}
