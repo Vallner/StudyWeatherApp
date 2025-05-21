@@ -29,12 +29,13 @@ struct Forecastday: Codable {
     let date: String
     let dateEpoch: Int
     let day: Day
-//    let hour: [Hour]
+    let hour: [Hour]
 
     enum CodingKeys: String, CodingKey {
         case date
         case dateEpoch = "date_epoch"
         case day
+        case hour
     }
 }
 
@@ -148,6 +149,63 @@ struct Condition: Codable {
             case localtime
         }
     }
+struct Hour: Codable {
+    let timeEpoch: Int
+    let time: String
+    let tempC, tempF: Decimal
+    let isDay: Int
+    let condition: Condition
+    let windMph, windKph: Decimal
+    let windDegree: Int
+//    let windDir: WindDir
+    let pressureMB: Int
+    let pressureIn, precipMm, precipIn: Double
+    let snowCM, humidity, cloud: Int
+    let feelslikeC, feelslikeF, windchillC, windchillF: Decimal
+    let heatindexC, heatindexF, dewpointC, dewpointF: Decimal
+    let willItRain, chanceOfRain, willItSnow, chanceOfSnow: Int
+    let visKM: Decimal
+    let visMiles: Decimal
+    let gustMph, gustKph, uv: Decimal
+//    let airQuality: AirQuality
+
+    enum CodingKeys: String, CodingKey {
+        case timeEpoch = "time_epoch"
+        case time
+        case tempC = "temp_c"
+        case tempF = "temp_f"
+        case isDay = "is_day"
+        case condition
+        case windMph = "wind_mph"
+        case windKph = "wind_kph"
+        case windDegree = "wind_degree"
+//        case windDir = "wind_dir"
+        case pressureMB = "pressure_mb"
+        case pressureIn = "pressure_in"
+        case precipMm = "precip_mm"
+        case precipIn = "precip_in"
+        case snowCM = "snow_cm"
+        case humidity, cloud
+        case feelslikeC = "feelslike_c"
+        case feelslikeF = "feelslike_f"
+        case windchillC = "windchill_c"
+        case windchillF = "windchill_f"
+        case heatindexC = "heatindex_c"
+        case heatindexF = "heatindex_f"
+        case dewpointC = "dewpoint_c"
+        case dewpointF = "dewpoint_f"
+        case willItRain = "will_it_rain"
+        case chanceOfRain = "chance_of_rain"
+        case willItSnow = "will_it_snow"
+        case chanceOfSnow = "chance_of_snow"
+        case visKM = "vis_km"
+        case visMiles = "vis_miles"
+        case gustMph = "gust_mph"
+        case gustKph = "gust_kph"
+        case uv
+//        case airQuality = "air_quality"
+    }
+}
 
 
 class NetManager{
@@ -165,7 +223,7 @@ class NetManager{
     }
     
     func obtainData(for city: String) async throws -> Weather{
-        let url = URL(string: "https://api.weatherapi.com/v1/forecast.json?key=42a6424772284474b8c102539251805&q=" + city + "&days=7&aqi=yes&alerts=no")!
+        let url = URL(string: "https://api.weatherapi.com/v1/forecast.json?key=42a6424772284474b8c102539251805&q=" + city + "&days=14&aqi=yes&alerts=no")!
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "GET"
         

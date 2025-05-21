@@ -82,12 +82,8 @@ class WeatherCell: UITableViewCell {
     
     func getWeekday(from date: Int) -> String {
         let calendar = Calendar.current
-        let today = calendar.component(.weekday, from: Date())
         let components = calendar.component(.weekday, from: Date.init(timeIntervalSince1970: Double(date)))
-       
         switch components {
-        case today:
-            return "Today"
         case 1:
             return "Sun"
         case 2:
@@ -104,6 +100,8 @@ class WeatherCell: UITableViewCell {
             return "Sat"
         }
         
+        
     }
-    
+   
 }
+

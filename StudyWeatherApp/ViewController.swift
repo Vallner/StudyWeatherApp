@@ -173,6 +173,15 @@ class ViewController: UIViewController {
             
         ])
     }
+    
+    @objc func refreshData(send:UIRefreshControl) {
+
+        loadForecast(for: "Minsk")
+        setupLayout()
+        tableView.reloadData()
+        send.endRefreshing()
+    }
+    
 }
 
 extension ViewController:UITableViewDataSource,UITableViewDelegate{
@@ -182,12 +191,17 @@ extension ViewController:UITableViewDataSource,UITableViewDelegate{
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = WeatherCell()
-        cell.delegate = self
-        cell.configureCell(with: weather!.forecast.forecastday[indexPath.row])
-        cell.setupLayout()
-        return cell
-    }
+        let cell = tableView.dequeueReusableCell(withIdentifier: "WeatherCell", for: indexPath) as! WeatherCell
+            cell.delegate = self
+            cell.configureCell(with: weather!.forecast.forecastday[indexPath.row])
+            if indexPath.row == 0{
+                cell.dayOfWeek.text = "Today"
+            }
+            cell.setupLayout()
+            return cell
+        }
+        
+    
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
     
@@ -198,12 +212,12 @@ extension ViewController:UITableViewDataSource,UITableViewDelegate{
         
         return sectionView
     }
-    
-    @objc func refreshData(send:UIRefreshControl) {
-
-        loadForecast(for: "Minsk")
-        setupLayout()
-        tableView.reloadData()
-        send.endRefreshing()
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let detailed = DetailedViewController()
+        detailed.delegate = self
+        detailed.configureView(with: weather!.forecast.forecastday[indexPath.row])
+        present(detailed, animated: true)
+        tableView.deselectRow(at: indexPath, animated: true)
     }
+    
 }
