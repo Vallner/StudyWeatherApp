@@ -21,13 +21,26 @@ class ViewController: UIViewController {
         view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         return view
     }()
-    lazy var cityLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = .white
-        label.font = .systemFont(ofSize: 30, weight: .medium)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+    lazy var cityButton: UIButton = {
+        let city = UIButton(primaryAction: nil)
+        let actionClosure = {(action:UIAction) in
+            city.titleLabel?.text = action.title
+            print(action.title)
+            self.loadForecast(for: city.titleLabel!.text!)}
+        
+        var dataSource = ["Minsk","Grodno","Mogilev"]
+        var menuChildren:[UIMenuElement] = []
+        for cityElement in dataSource {
+            menuChildren.append(UIAction(title:cityElement,state: .on, handler: actionClosure))
+        }
+        city.menu = UIMenu(options: .displayInline, children: menuChildren)
+        city.showsMenuAsPrimaryAction = true
+        city.changesSelectionAsPrimaryAction = true
+        
+        city.titleLabel?.font = .systemFont(ofSize: 30, weight: .medium)
+        city.translatesAutoresizingMaskIntoConstraints = false
+        city.tintColor = .white
+        return city
     }()
     
     lazy var dateOfRequest: UILabel = {
@@ -113,7 +126,7 @@ class ViewController: UIViewController {
                 
                 dateOfRequest.text = weather!.location.localtime
                 
-                cityLabel.text = weather!.location.name
+                cityButton.titleLabel?.text = weather!.location.name
                 
                 descriptionLabel.text = weather!.current.condition.text
                 
@@ -140,16 +153,16 @@ class ViewController: UIViewController {
         view.backgroundColor = .systemBlue
         headerView.addSubview(stackView)
         headerView.addSubview(dateOfRequest)
-        headerView.addSubview(cityLabel)
+        headerView.addSubview(cityButton)
         headerView.addSubview(temperatureLabel)
         headerView.addSubview(windLabel)
         headerView.addSubview(humidityLabel)
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
             
-            cityLabel.topAnchor.constraint(equalTo: headerView.topAnchor, constant: 30),
-            cityLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            cityLabel.bottomAnchor.constraint(equalTo: dateOfRequest.topAnchor),
+            cityButton.topAnchor.constraint(equalTo: headerView.topAnchor, constant: 30),
+            cityButton.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
+            cityButton.bottomAnchor.constraint(equalTo: dateOfRequest.topAnchor),
             
             dateOfRequest.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
             dateOfRequest.bottomAnchor.constraint(equalTo: temperatureLabel.topAnchor, constant: -20),
