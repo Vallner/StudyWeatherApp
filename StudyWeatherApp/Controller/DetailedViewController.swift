@@ -11,6 +11,24 @@ class DetailedViewController: UIViewController {
 
     weak var delegate:ViewController?
     
+    var day : Forecastday?
+    
+    var forecastCollectionView: UICollectionView = {
+        var layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical
+        layout.itemSize = CGSize(width: 120, height: 170)
+        layout.minimumLineSpacing = 5
+        layout.minimumInteritemSpacing = 5
+        
+        var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.register(HourCollectionViewCell.self, forCellWithReuseIdentifier: "HourCollectionViewCell")
+        collectionView.isScrollEnabled = true
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.backgroundColor = .clear
+ 
+        return collectionView
+    }()
+    
     lazy var cityLabel: UILabel = {
         let label = UILabel()
         label.textColor = .white
@@ -73,19 +91,20 @@ class DetailedViewController: UIViewController {
     
     override func viewDidLoad() {
         view.backgroundColor = UIColor(#colorLiteral(red: 0.2392156869, green: 0.6745098233, blue: 0.9686274529, alpha: 1))
+        forecastCollectionView.delegate = self
+        forecastCollectionView.dataSource = self
         super.viewDidLoad()
         setupLayout()
         
         // Do any additional setup after loading the view.
     }
+    
     func configureView(with day: Forecastday ){
         
-        Task{
-            do{
-                imageView.image = try await UIImage(data: (delegate!.netManager.getImage(urlString: "https:" + day.day.condition.icon)))
-            } catch {
-                print(error)
-            }
+        loadImage(from: day.day.condition.icon, to: imageView)
+        
+            self.day = day
+            
             temperatureLabel.text = "\(day.day.avgtempC)" + "°"
             
             dateOfRequest.text = day.date
@@ -98,8 +117,19 @@ class DetailedViewController: UIViewController {
             
             humidityLabel.text = "\(day.day.avghumidity)%"
             
+            
         }
         
+    
+    
+    func loadImage(from URL: String, to imageView: UIImageView) {
+    Task{
+        do{
+            imageView.image =  try await UIImage(data: (delegate!.netManager.getImage(urlString: "https:" + URL))) ?? nil
+        } catch {
+            print(error)
+            }
+        }
     }
     
     func setupLayout() {
@@ -115,6 +145,7 @@ class DetailedViewController: UIViewController {
         view.addSubview(temperatureLabel)
         view.addSubview(windLabel)
         view.addSubview(humidityLabel)
+        view.addSubview(forecastCollectionView)
        
         NSLayoutConstraint.activate([
             
@@ -135,6 +166,10 @@ class DetailedViewController: UIViewController {
             windLabel.bottomAnchor.constraint(equalTo: humidityLabel.topAnchor),
             
             humidityLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            forecastCollectionView.topAnchor.constraint(equalTo: humidityLabel.bottomAnchor, constant: 20),
+            forecastCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
+            forecastCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
+            forecastCollectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
 //            humidityLabel.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
             
         ])
@@ -151,3 +186,30 @@ class DetailedViewController: UIViewController {
     */
 
 }
+extension DetailedViewController:UICollectionViewDelegate , UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        print(day?.hour.count ?? 0)
+        return day?.hour.count ?? 0
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "HourCollectionViewCell", for: indexPath) as! HourCollectionViewCell
+            cell.configure(with: day!.hour[indexPath.row])
+            loadImage(from: day!.hour[indexPath.row].condition.icon, to: cell.image)
+            cell.setupLayout()
+            cell.layer.cornerRadius = 10
+        print("oldCell",indexPath.row)
+            return cell
+//        }
+//        let cell = HourCollectionViewCell()
+//        loadImage(from: day!.hour[indexPath.row].condition.icon, to: cell.image)
+//        cell.configure(with: day!.hour[indexPath.row])
+//        cell.setupLayout()
+//        print("newCell")
+//        return cell
+//        
+    }
+    
+    
+}
+

@@ -15,6 +15,7 @@ class ViewController: UIViewController {
     
     var refresh = UIRefreshControl()
     
+    
     let headerView: UIView = {
         let view = UIView()
         view.backgroundColor = .systemBlue
@@ -110,6 +111,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         
         super.viewDidLoad()
+        refresh.addTarget(self, action: #selector(refreshData), for: UIControl.Event.valueChanged)
         loadForecast(for: "Minsk")
         setupLayout()
 
@@ -147,7 +149,7 @@ class ViewController: UIViewController {
         stackView.axis = .horizontal
         stackView.translatesAutoresizingMaskIntoConstraints = false
         tableView.addSubview(refresh)
-        refresh.addTarget(self, action: #selector(refreshData), for: UIControl.Event.valueChanged)
+       
         
         
         view.backgroundColor = .systemBlue
@@ -189,8 +191,7 @@ class ViewController: UIViewController {
     
     @objc func refreshData(send:UIRefreshControl) {
 
-        loadForecast(for: "Minsk")
-        setupLayout()
+        loadForecast(for: (cityButton.titleLabel?.text)!)
         tableView.reloadData()
         send.endRefreshing()
     }
